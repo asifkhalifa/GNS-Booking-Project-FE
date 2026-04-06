@@ -3,8 +3,8 @@
  * Amount is always the live seat total in the UI; "Open in UPI app" prefills it via upi://
  */
 export const PAYMENT_CONFIG = {
-  upiId: import.meta.env.VITE_UPI_ID ?? '7738612015@ptaxis',
-  payeeName: import.meta.env.VITE_UPI_PAYEE_NAME ?? 'Charmi Shailesh Shah',
+  upiId: process.env.NEXT_PUBLIC_UPI_ID ?? '7738612015@ptaxis',
+  payeeName: process.env.NEXT_PUBLIC_UPI_PAYEE_NAME ?? 'Charmi Shailesh Shah',
   /** Static QR image in /public (your Paytm UPI QR) */
-  staticQrImagePath: import.meta.env.VITE_UPI_QR_IMAGE ?? '/upi-paytm-qr.png',
+  staticQrImagePath: process.env.NEXT_PUBLIC_UPI_QR_IMAGE ?? '/upi-paytm-qr.png',
 } as const

@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback, useEffect, useState } from 'react'
 import { PAYMENT_CONFIG } from '../../../data/paymentConfig'
 
@@ -15,13 +17,7 @@ type Props = {
   upiUri: string
 }
 
-export function PaymentModal({
-  open,
-  onClose,
-  totalAmount,
-  lineItems,
-  upiUri,
-}: Props) {
+export function PaymentModal({ open, onClose, totalAmount, lineItems, upiUri }: Props) {
   const { upiId, payeeName, staticQrImagePath } = PAYMENT_CONFIG
   const [copied, setCopied] = useState(false)
 

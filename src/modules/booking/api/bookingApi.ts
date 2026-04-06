@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../../../apiBase'
+import { apiUrl } from '../../../apiBase'
 import type {
   AdminBooking,
   AdminBookingPaymentMethod,
@@ -7,8 +7,6 @@ import type {
   UpdateAdminBookingPayload,
   UserTicket,
 } from '../types'
-
-const base = API_BASE_URL
 
 async function parseError(res: Response): Promise<string> {
   try {
@@ -27,7 +25,7 @@ export async function saveBooking(payload: SaveBookingRequest): Promise<unknown>
     email: payload.email.trim(),
     seatNmbrs: payload.seatNmbrs.map((s) => String(s).trim()),
   }
-  const res = await fetch(`${base}/booking/save`, {
+  const res = await fetch(apiUrl('/booking/save'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -43,7 +41,7 @@ export async function saveBooking(payload: SaveBookingRequest): Promise<unknown>
 }
 
 function normStatus(v: unknown): string {
-  return String(v ?? 'UNPAID')
+  return String(v ?? 'PAYMENT_PENDING')
     .trim()
     .toUpperCase()
 }
@@ -107,7 +105,7 @@ export function parseTicketsPayload(data: unknown): UserTicket[] {
  */
 export async function fetchUserTickets(email: string): Promise<UserTicket[]> {
   const q = encodeURIComponent(email.trim())
-  const res = await fetch(`${base}/booking/tickets/all/get?email=${q}`)
+  const res = await fetch(apiUrl(`/booking/tickets/all/get?email=${q}`))
   if (res.status === 404) return []
   if (!res.ok) throw new Error(await parseError(res))
   const data: unknown = await res.json()
@@ -120,7 +118,7 @@ export async function fetchUserTickets(email: string): Promise<UserTicket[]> {
  */
 export async function fetchAdminAllTickets(email: string): Promise<UserTicket[]> {
   const q = encodeURIComponent(email.trim())
-  const res = await fetch(`${base}/booking/tickets/admin/all/get?email=${q}`)
+  const res = await fetch(apiUrl(`/booking/tickets/admin/all/get?email=${q}`))
   if (res.status === 404) return []
   if (!res.ok) throw new Error(await parseError(res))
   const data: unknown = await res.json()
@@ -188,7 +186,7 @@ export function parseAdminBookingsList(data: unknown): AdminBooking[] {
  */
 export async function fetchAdminBookings(email: string): Promise<AdminBooking[]> {
   const q = encodeURIComponent(email.trim())
-  const res = await fetch(`${base}/booking/tickets/admin/all/get?email=${q}`)
+  const res = await fetch(apiUrl(`/booking/tickets/admin/all/get?email=${q}`))
   if (res.status === 404) return []
   if (!res.ok) throw new Error(await parseError(res))
   const data: unknown = await res.json()
@@ -207,7 +205,7 @@ export async function updateAdminBooking(payload: UpdateAdminBookingPayload): Pr
     email: payload.loginUserEmail.trim(),
     aprvd: payload.isApproved ?? false,
   }
-  const res = await fetch(`${base}/booking/confirm`, {
+  const res = await fetch(apiUrl('/booking/confirm'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -233,7 +231,7 @@ export async function cancelAdminBookingSeats(payload: CancelAdminSeatsPayload):
     bkngId: payload.bookingId,
     seatNmbrs: payload.seatNmbrs.map((s) => String(s).trim()),
   }
-  const res = await fetch(`${base}/booking/cancel-seats`, {
+  const res = await fetch(apiUrl('/booking/cancel-seats'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -241,4 +239,16 @@ export async function cancelAdminBookingSeats(payload: CancelAdminSeatsPayload):
   if (!res.ok) throw new Error(await parseError(res))
   const text = await res.text()
   return text.trim() || 'Seats cancelled.'
+}
+
+export async function notifyBookingPaid(payload: {
+  email: string
+  bookingId: number
+}): Promise<void> {
+  const res = await fetch(apiUrl('/booking/notify-paid'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error(await parseError(res))
 }

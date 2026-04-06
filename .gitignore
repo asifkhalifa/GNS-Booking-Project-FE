@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# env with secrets (keep SMTP / Firebase keys out of git)
+.env.local
+.env*.local
+
+# Firebase service account (use FIREBASE_SERVICE_ACCOUNT_FILE=config/firebase-service-account.json locally)
+config/firebase-service-account.json
+
+# debug
+npm-debug.log*

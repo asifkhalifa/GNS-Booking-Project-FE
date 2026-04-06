@@ -1,14 +1,17 @@
-import { Link, Navigate } from 'react-router-dom'
+'use client'
+
+import Link from 'next/link'
+import { Redirect } from '@/components/Redirect'
 import { useUser } from '../../user'
 
 export function AdminProfilePage() {
   const { session, signOut } = useUser()
 
   if (!session) {
-    return <Navigate to="/" replace />
+    return <Redirect to="/" />
   }
   if (!session.isAdmin) {
-    return <Navigate to="/profile" replace />
+    return <Redirect to="/profile" />
   }
 
   const { email } = session
@@ -30,7 +33,7 @@ export function AdminProfilePage() {
           </div>
         </dl>
         <div className="profile-page__actions">
-          <Link to="/" className="btn btn--ghost">
+          <Link href="/" className="btn btn--ghost">
             Home
           </Link>
           <button type="button" className="btn btn--ghost" onClick={signOut}>

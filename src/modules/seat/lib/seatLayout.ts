@@ -59,7 +59,10 @@ export function groupSeatsByRow(seats: Seat[]): Map<string, Seat[]> {
 
 export function seatVisualClass(seat: Seat): string {
   const unavailable =
-    seat.status === 'BOOKED' || seat.section === 'BLOCKED' || seat.price <= 0
+    seat.status === 'BOOKED' ||
+    seat.status === 'LOCKED' ||
+    seat.section === 'BLOCKED' ||
+    seat.price <= 0
   if (unavailable) return 'seat-map__seat--muted'
 
   const { price, section } = seat
@@ -72,5 +75,7 @@ export function seatVisualClass(seat: Seat): string {
 }
 
 export function isSeatSelectable(seat: Seat): boolean {
-  return seat.status === 'AVAILABLE' && seat.section !== 'BLOCKED' && seat.price > 0
+  return (
+    seat.status === 'AVAILABLE' && seat.section !== 'BLOCKED' && seat.price > 0
+  )
 }

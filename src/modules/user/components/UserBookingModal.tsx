@@ -1,5 +1,7 @@
+'use client'
+
 import { type FormEvent, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { sendOtp, verifyOtp } from '../api/userApi'
 import { useUser } from '../context/UserProvider'
 import { interpretVerifyOtpResponse } from '../lib/parseIsAdmin'
@@ -12,7 +14,7 @@ type Props = {
 }
 
 export function UserBookingModal({ open, onClose }: Props) {
-  const navigate = useNavigate()
+  const router = useRouter()
   const { setSession } = useUser()
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
@@ -71,7 +73,7 @@ export function UserBookingModal({ open, onClose }: Props) {
       }
       setSession({ email: trimmedEmail, profile: parsed.profile, isAdmin: parsed.isAdmin })
       handleClose()
-      navigate(parsed.isAdmin ? '/admin/profile' : '/profile')
+      router.push(parsed.isAdmin ? '/admin/profile' : '/profile')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed.')
     } finally {

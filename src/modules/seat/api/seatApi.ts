@@ -1,7 +1,5 @@
-import { API_BASE_URL } from '../../../apiBase'
+import { apiUrl } from '../../../apiBase'
 import type { Seat } from '../types'
-
-const base = API_BASE_URL
 
 async function parseError(res: Response): Promise<string> {
   try {
@@ -15,8 +13,11 @@ async function parseError(res: Response): Promise<string> {
   }
 }
 
-export async function fetchAllSeats(): Promise<Seat[]> {
-  const res = await fetch(`${base}/seat/all/get`)
+export async function fetchAllSeats(viewerEmail?: string): Promise<Seat[]> {
+  const q = viewerEmail?.trim()
+    ? `?email=${encodeURIComponent(viewerEmail.trim())}`
+    : ''
+  const res = await fetch(apiUrl(`/seat/all/get${q}`))
   if (!res.ok) throw new Error(await parseError(res))
   const data: unknown = await res.json()
   if (!Array.isArray(data)) return []

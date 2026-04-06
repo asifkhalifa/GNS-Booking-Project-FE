@@ -1,4 +1,7 @@
-import { Link, Navigate } from 'react-router-dom'
+'use client'
+
+import Link from 'next/link'
+import { Redirect } from '@/components/Redirect'
 import { useUser } from '../context/UserProvider'
 
 function renderProfileValue(value: unknown): string {
@@ -13,14 +16,27 @@ function renderProfileValue(value: unknown): string {
   }
 }
 
+/** Remove admin-only fields so we never show `isAdmin` on the user profile screen. */
+function stripAdminFieldsForDisplay(value: unknown): unknown {
+  if (value === null || value === undefined) return null
+  if (typeof value !== 'object' || Array.isArray(value)) return value
+  const o = { ...(value as Record<string, unknown>) }
+  delete o.isAdmin
+  delete o.admin
+  delete o.is_admin
+  const keys = Object.keys(o)
+  if (keys.length === 0) return null
+  return o
+}
+
 export function UserProfilePage() {
   const { session, signOut } = useUser()
 
   if (!session) {
-    return <Navigate to="/" replace />
+    return <Redirect to="/" />
   }
   if (session.isAdmin) {
-    return <Navigate to="/admin/profile" replace />
+    return <Redirect to="/admin/profile" />
   }
 
   const { email, profile } = session
@@ -31,13 +47,18 @@ export function UserProfilePage() {
     for (const [key, val] of Object.entries(obj)) {
       if (key.toLowerCase() === 'email') continue
       if (key.toLowerCase() === 'isadmin') continue
+      const cleaned = stripAdminFieldsForDisplay(val)
+      if (cleaned === null) continue
       rows.push({
         label: key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim(),
-        value: renderProfileValue(val),
+        value: renderProfileValue(cleaned),
       })
     }
   } else if (profile !== null && profile !== undefined) {
-    rows.push({ label: 'Details', value: renderProfileValue(profile) })
+    const cleaned = stripAdminFieldsForDisplay(profile)
+    if (cleaned !== null) {
+      rows.push({ label: 'Details', value: renderProfileValue(cleaned) })
+    }
   }
 
   return (
@@ -56,7 +77,7 @@ export function UserProfilePage() {
           ))}
         </dl>
         <div className="profile-page__actions">
-          <Link to="/" className="btn btn--ghost">
+          <Link href="/" className="btn btn--ghost">
             Home
           </Link>
           <button type="button" className="btn btn--ghost" onClick={signOut}>

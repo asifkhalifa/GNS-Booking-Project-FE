@@ -2,22 +2,27 @@
   "name": "gns-26-booking",
   "private": true,
   "version": "0.0.1",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "firebase:encode-key": "node scripts/encode-firebase-key.mjs",
+    "seed:seats": "node scripts/reseed-seats.mjs",
+    "apply-seat-chart": "tsx scripts/apply-seat-chart.ts"
   },
   "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "next": "^14.2.18",
+    "nodemailer": "^6.9.16",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/nodemailer": "^6.4.17",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
-    "typescript": "~5.6.2",
-    "vite": "^5.4.10"
+    "tsx": "^4.21.0",
+    "typescript": "~5.6.2"
   }
 }

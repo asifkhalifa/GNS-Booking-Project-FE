@@ -11,6 +11,7 @@ export {
   fetchAdminAllTickets,
   fetchAdminBookings,
   fetchUserTickets,
+  notifyBookingPaid,
   parseAdminBookingsList,
   parseTicketsPayload,
   saveBooking,

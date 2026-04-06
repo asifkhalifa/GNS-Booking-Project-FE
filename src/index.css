@@ -1386,6 +1386,23 @@ body.nav-menu-open {
   cursor: not-allowed;
 }
 
+.pay-modal__notify {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.pay-modal__notify-hint {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+}
+.pay-modal__notify-msg {
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0;
+  color: var(--accent);
+}
+
 .pay-modal__actions--single {
   margin-top: 0.25rem;
 }

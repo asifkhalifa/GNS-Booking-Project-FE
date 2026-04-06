@@ -1,7 +1,10 @@
+'use client'
+
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -32,15 +35,18 @@ function normalizeStoredSession(raw: UserSession | null): UserSession | null {
 }
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [session, setSessionState] = useState<UserSession | null>(() => {
+  /** Must start null on server + first client paint — reading localStorage in useState breaks hydration. */
+  const [session, setSessionState] = useState<UserSession | null>(null)
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return null
-      return normalizeStoredSession(JSON.parse(raw) as UserSession)
+      if (!raw) return
+      setSessionState(normalizeStoredSession(JSON.parse(raw) as UserSession))
     } catch {
-      return null
+      // ignore corrupt storage
     }
-  })
+  }, [])
 
   const setSession = useCallback((s: UserSession | null) => {
     const next = s

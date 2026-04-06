@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+'use client'
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { isValidEmail } from '../../../lib/emailUtil'
 import { PAYMENT_CONFIG } from '../../../data/paymentConfig'
 import { PaymentModal, buildUpiPayUri, saveBooking } from '../../booking'
 import { interpretVerifyOtpResponse, sendOtp, useUser, verifyOtp } from '../../user'
 import { fetchAllSeats } from '../api/seatApi'
+import { lockSeats as holdSeats, unlockSeats as releaseSeats } from '../api/seatLockApi'
 import type { Seat } from '../types'
 import { MAX_SEATS_PER_BOOKING } from '../constants'
 import {
@@ -41,6 +44,18 @@ export function SeatMapPage() {
   const [beneficiaryEmail, setBeneficiaryEmail] = useState('')
   const [adminGuestOtpPhase, setAdminGuestOtpPhase] = useState<'details' | 'guest_otp'>('details')
   const [guestOtp, setGuestOtp] = useState('')
+  const seatHoldRef = useRef<{ email: string; seatNumbers: string[] } | null>(null)
+
+  const releaseSeatHold = useCallback(async () => {
+    const h = seatHoldRef.current
+    if (!h) return
+    try {
+      await releaseSeats(h.email, h.seatNumbers)
+    } catch {
+      /* ignore */
+    }
+    seatHoldRef.current = null
+  }, [])
 
   useEffect(() => {
     if (session?.email) {
@@ -49,9 +64,9 @@ export function SeatMapPage() {
   }, [session?.email])
 
   const loadSeats = useCallback(async () => {
-    const data = await fetchAllSeats()
+    const data = await fetchAllSeats(session?.email)
     setSeats(data)
-  }, [])
+  }, [session?.email])
 
   useEffect(() => {
     let cancelled = false
@@ -71,26 +86,30 @@ export function SeatMapPage() {
 
   const byRow = useMemo(() => groupSeatsByRow(seats), [seats])
 
-  const toggle = useCallback((seat: Seat) => {
-    setConfirmDialogOpen(false)
-    setConfirmError(null)
-    setAdminGuestOtpPhase('details')
-    setGuestOtp('')
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(seat.seatNumber)) {
-        next.delete(seat.seatNumber)
+  const toggle = useCallback(
+    (seat: Seat) => {
+      void releaseSeatHold()
+      setConfirmDialogOpen(false)
+      setConfirmError(null)
+      setAdminGuestOtpPhase('details')
+      setGuestOtp('')
+      setSelected((prev) => {
+        const next = new Set(prev)
+        if (next.has(seat.seatNumber)) {
+          next.delete(seat.seatNumber)
+          return next
+        }
+        if (next.size >= MAX_SEATS_PER_BOOKING) {
+          setLimitToast(`You can select at most ${MAX_SEATS_PER_BOOKING} seats at a time.`)
+          window.setTimeout(() => setLimitToast(null), 4000)
+          return prev
+        }
+        next.add(seat.seatNumber)
         return next
-      }
-      if (next.size >= MAX_SEATS_PER_BOOKING) {
-        setLimitToast(`You can select at most ${MAX_SEATS_PER_BOOKING} seats at a time.`)
-        window.setTimeout(() => setLimitToast(null), 4000)
-        return prev
-      }
-      next.add(seat.seatNumber)
-      return next
-    })
-  }, [])
+      })
+    },
+    [releaseSeatHold]
+  )
 
   const legendPrices = useMemo(() => {
     const set = new Set<number>()
@@ -122,28 +141,38 @@ export function SeatMapPage() {
 
   const finalizeBookingSave = useCallback(
     async (targetEmail: string) => {
-      await saveBooking({
-        email: targetEmail,
-        seatNmbrs: selectedSeats.map((s) => s.seatNumber),
-      })
-      const seatKey = [...selected].sort().join(',')
-      setPaymentSnapshot({
-        lineItems: selectedSeats.map((s) => ({ seatNumber: s.seatNumber, price: s.price })),
-        totalAmount: total,
-        seatKey,
-      })
-      setSelected(new Set())
-      setConfirmDialogOpen(false)
-      setAdminGuestOtpPhase('details')
-      setGuestOtp('')
-      await loadSeats()
-      setPaymentOpen(true)
-      setBookingToast(
-        isAdmin
-          ? `Booking saved for ${targetEmail}. Complete payment with UPI below.`
-          : 'Seats confirmed and saved. Complete payment with UPI below.'
-      )
-      window.setTimeout(() => setBookingToast(null), 5000)
+      const seatNums = selectedSeats.map((s) => s.seatNumber)
+      await holdSeats(targetEmail, seatNums)
+      seatHoldRef.current = { email: targetEmail, seatNumbers: seatNums }
+      try {
+        await saveBooking({
+          email: targetEmail,
+          seatNmbrs: seatNums,
+        })
+        seatHoldRef.current = null
+        const seatKey = [...selected].sort().join(',')
+        setPaymentSnapshot({
+          lineItems: selectedSeats.map((s) => ({ seatNumber: s.seatNumber, price: s.price })),
+          totalAmount: total,
+          seatKey,
+        })
+        setSelected(new Set())
+        setConfirmDialogOpen(false)
+        setAdminGuestOtpPhase('details')
+        setGuestOtp('')
+        await loadSeats()
+        setPaymentOpen(true)
+        setBookingToast(
+          isAdmin
+            ? `Booking saved for ${targetEmail}. Guest sees “waiting for approval” until you mark paid.`
+            : 'Booking saved. Your tickets show “waiting for approval” until an admin confirms payment.'
+        )
+        window.setTimeout(() => setBookingToast(null), 5000)
+      } catch (e) {
+        await releaseSeats(targetEmail, seatNums)
+        seatHoldRef.current = null
+        throw e
+      }
     },
     [selectedSeats, selected, total, isAdmin, loadSeats]
   )
@@ -161,14 +190,23 @@ export function SeatMapPage() {
     }
     setConfirmSubmitting(true)
     setConfirmError(null)
+    const seatNums = selectedSeats.map((s) => s.seatNumber)
     try {
       if (!isAdmin) {
         await finalizeBookingSave(targetEmail)
         return
       }
-      await sendOtp(targetEmail)
-      setAdminGuestOtpPhase('guest_otp')
-      setGuestOtp('')
+      await holdSeats(targetEmail, seatNums)
+      seatHoldRef.current = { email: targetEmail, seatNumbers: seatNums }
+      try {
+        await sendOtp(targetEmail)
+        setAdminGuestOtpPhase('guest_otp')
+        setGuestOtp('')
+      } catch (e) {
+        await releaseSeats(targetEmail, seatNums)
+        seatHoldRef.current = null
+        throw e
+      }
     } catch (e) {
       setConfirmError(e instanceof Error ? e.message : 'Could not continue. Try again.')
     } finally {
@@ -215,6 +253,7 @@ export function SeatMapPage() {
 
   function handleGuestOtpBack() {
     if (confirmSubmitting) return
+    void releaseSeatHold()
     setAdminGuestOtpPhase('details')
     setGuestOtp('')
     setConfirmError(null)
@@ -229,6 +268,7 @@ export function SeatMapPage() {
 
   function closeConfirmDialog() {
     if (confirmSubmitting) return
+    void releaseSeatHold()
     setConfirmDialogOpen(false)
     setConfirmError(null)
     setAdminGuestOtpPhase('details')
@@ -259,7 +299,7 @@ export function SeatMapPage() {
           {!session && (
             <>
               {' '}
-              <Link to="/" className="seat-map-page__inline-link">
+              <Link href="/" className="seat-map-page__inline-link">
                 Sign in from home
               </Link>{' '}
               to confirm and pay.
@@ -400,7 +440,7 @@ export function SeatMapPage() {
                 </button>
               ) : (
                 <p className="seat-map-page__bar-signin">
-                  <Link to="/">Go to home</Link> and use <strong>Book ticket</strong> to sign in, then
+                  <Link href="/">Go to home</Link> and use <strong>Book ticket</strong> to sign in, then
                   confirm seats here.
                 </p>
               )}

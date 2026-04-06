@@ -1,6 +1,4 @@
-import { API_BASE_URL } from '../../../apiBase'
-
-const base = API_BASE_URL
+import { apiUrl } from '../../../apiBase'
 
 async function parseError(res: Response): Promise<string> {
   try {
@@ -15,7 +13,7 @@ async function parseError(res: Response): Promise<string> {
 }
 
 export async function sendOtp(email: string): Promise<void> {
-  const res = await fetch(`${base}/user/send-otp`, {
+  const res = await fetch(apiUrl('/user/send-otp'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -30,7 +28,7 @@ export async function sendOtp(email: string): Promise<void> {
 export async function checkUserExists(email: string): Promise<boolean | null> {
   const q = encodeURIComponent(email.trim())
   try {
-    const res = await fetch(`${base}/user/exists?email=${q}`)
+    const res = await fetch(apiUrl(`/user/exists?email=${q}`))
     if (!res.ok) return null
     const data: unknown = await res.json()
     if (data && typeof data === 'object' && 'exists' in data) {
@@ -46,7 +44,7 @@ export async function verifyOtp(
   email: string,
   otp: string
 ): Promise<unknown> {
-  const res = await fetch(`${base}/user/verify-otp`, {
+  const res = await fetch(apiUrl('/user/verify-otp'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, otp }),

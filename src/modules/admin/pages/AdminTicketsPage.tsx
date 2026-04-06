@@ -1,5 +1,9 @@
+'use client'
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Redirect } from '@/components/Redirect'
 import { STATIC_ADMIN_BOOKINGS } from '../../../data/staticAdminBookings'
 import {
   cancelAdminBookingSeats,
@@ -50,9 +54,9 @@ function applySeatCancellation(
 }
 
 export function AdminTicketsPage() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const staticBookings = useStaticAdminBookingsList(searchParams.get('static'))
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const staticBookings = useStaticAdminBookingsList(searchParams?.get('static') ?? null)
   const { session } = useUser()
   const [bookings, setBookings] = useState<AdminBooking[]>([])
   const [priceBySeat, setPriceBySeat] = useState<Map<string, number>>(() => new Map())
@@ -114,7 +118,7 @@ export function AdminTicketsPage() {
   const loadData = useCallback(async () => {
     let map = new Map<string, number>()
     try {
-      const seats = await fetchAllSeats()
+      const seats = await fetchAllSeats(session?.email)
       map = new Map(seats.map((s) => [s.seatNumber, s.price]))
     } catch {
       /* seat chart optional for prices */
@@ -136,11 +140,11 @@ export function AdminTicketsPage() {
 
   useEffect(() => {
     if (!session?.email) {
-      navigate('/', { replace: true })
+      router.replace('/')
       return
     }
     if (!session.isAdmin) {
-      navigate('/', { replace: true })
+      router.replace('/')
       return
     }
     let cancelled = false
@@ -156,7 +160,7 @@ export function AdminTicketsPage() {
     return () => {
       cancelled = true
     }
-  }, [session?.email, session?.isAdmin, navigate, loadData, staticBookings])
+  }, [session?.email, session?.isAdmin, router, loadData, staticBookings])
 
   const sortedBookings = useMemo(() => {
     return [...bookings].sort((a, b) => b.bookingId - a.bookingId)
@@ -283,13 +287,13 @@ export function AdminTicketsPage() {
 
   if (!session?.email) return null
   if (!session.isAdmin) {
-    return <Navigate to="/" replace />
+    return <Redirect to="/" />
   }
 
   return (
     <main className="tickets-page admin-tickets-page">
       <div className="tickets-page__header">
-        <Link to="/admin/profile" className="tickets-page__back">
+        <Link href="/admin/profile" className="tickets-page__back">
           ← Admin
         </Link>
         <h1 className="tickets-page__title">All bookings</h1>
@@ -301,16 +305,16 @@ export function AdminTicketsPage() {
           <p className="admin-tickets-page__demo-banner" role="status">
             <strong>Static data</strong> — from <code>src/data/staticAdminBookings.ts</code>. Save only
             updates this page.{' '}
-            {import.meta.env.DEV ? (
+            {process.env.NODE_ENV === 'development' ? (
               <span>
-                For the API: unset <code>VITE_ADMIN_BOOKINGS_STATIC</code> and open this page without{' '}
+                For the API: unset <code>NEXT_PUBLIC_ADMIN_BOOKINGS_STATIC</code> and open this page without{' '}
                 <code>?static=1</code>.
               </span>
-            ) : searchParams.get('static') === '1' ? (
-              <Link to="/admin/tickets">Use live API</Link>
+            ) : searchParams?.get('static') === '1' ? (
+              <Link href="/admin/tickets">Use live API</Link>
             ) : (
               <span>
-                Unset <code>VITE_ADMIN_BOOKINGS_STATIC</code> in your deployment environment to use the API.
+                Unset <code>NEXT_PUBLIC_ADMIN_BOOKINGS_STATIC</code> in your deployment environment to use the API.
               </span>
             )}
           </p>
