@@ -5,24 +5,17 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "firebase:encode-key": "node scripts/encode-firebase-key.mjs",
-    "seed:seats": "node scripts/reseed-seats.mjs",
-    "apply-seat-chart": "tsx scripts/apply-seat-chart.ts"
+    "start": "next start"
   },
   "dependencies": {
-    "firebase-admin": "^12.7.0",
     "next": "^14.2.18",
-    "nodemailer": "^6.9.16",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.17.6",
-    "@types/nodemailer": "^6.4.17",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "tsx": "^4.21.0",
     "typescript": "~5.6.2"
   }
 }
