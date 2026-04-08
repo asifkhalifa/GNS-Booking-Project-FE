@@ -1,12 +1,10 @@
-'use client'
-
-import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export function Redirect({ to }: { to: string }) {
-  const router = useRouter()
+  const navigate = useNavigate()
   useEffect(() => {
-    router.replace(to)
-  }, [router, to])
+    navigate(to, { replace: true })
+  }, [navigate, to])
   return null
 }

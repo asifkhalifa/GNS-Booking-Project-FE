@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { Redirect } from '@/components/Redirect'
 import { useUser } from '../context/UserProvider'
 
@@ -77,7 +75,7 @@ export function UserProfilePage() {
           ))}
         </dl>
         <div className="profile-page__actions">
-          <Link href="/" className="btn btn--ghost">
+          <Link to="/" className="btn btn--ghost">
             Home
           </Link>
           <button type="button" className="btn btn--ghost" onClick={signOut}>

@@ -1,8 +1,5 @@
-'use client'
-
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Redirect } from '@/components/Redirect'
 import { STATIC_ADMIN_BOOKINGS } from '../../../data/staticAdminBookings'
 import {
@@ -54,9 +51,9 @@ function applySeatCancellation(
 }
 
 export function AdminTicketsPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const staticBookings = useStaticAdminBookingsList(searchParams?.get('static') ?? null)
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const staticBookings = useStaticAdminBookingsList(searchParams.get('static'))
   const { session } = useUser()
   const [bookings, setBookings] = useState<AdminBooking[]>([])
   const [priceBySeat, setPriceBySeat] = useState<Map<string, number>>(() => new Map())
@@ -140,11 +137,11 @@ export function AdminTicketsPage() {
 
   useEffect(() => {
     if (!session?.email) {
-      router.replace('/')
+      navigate('/', { replace: true })
       return
     }
     if (!session.isAdmin) {
-      router.replace('/')
+      navigate('/', { replace: true })
       return
     }
     let cancelled = false
@@ -160,7 +157,7 @@ export function AdminTicketsPage() {
     return () => {
       cancelled = true
     }
-  }, [session?.email, session?.isAdmin, router, loadData, staticBookings])
+  }, [session?.email, session?.isAdmin, navigate, loadData, staticBookings])
 
   const sortedBookings = useMemo(() => {
     return [...bookings].sort((a, b) => b.bookingId - a.bookingId)
@@ -293,7 +290,7 @@ export function AdminTicketsPage() {
   return (
     <main className="tickets-page admin-tickets-page">
       <div className="tickets-page__header">
-        <Link href="/admin/profile" className="tickets-page__back">
+        <Link to="/admin/profile" className="tickets-page__back">
           ← Admin
         </Link>
         <h1 className="tickets-page__title">All bookings</h1>
@@ -305,13 +302,13 @@ export function AdminTicketsPage() {
           <p className="admin-tickets-page__demo-banner" role="status">
             <strong>Static data</strong> — from <code>src/data/staticAdminBookings.ts</code>. Save only
             updates this page.{' '}
-            {process.env.NODE_ENV === 'development' ? (
+            {import.meta.env.DEV ? (
               <span>
                 For the API: unset <code>NEXT_PUBLIC_ADMIN_BOOKINGS_STATIC</code> and open this page without{' '}
                 <code>?static=1</code>.
               </span>
             ) : searchParams?.get('static') === '1' ? (
-              <Link href="/admin/tickets">Use live API</Link>
+              <Link to="/admin/tickets">Use live API</Link>
             ) : (
               <span>
                 Unset <code>NEXT_PUBLIC_ADMIN_BOOKINGS_STATIC</code> in your deployment environment to use the API.

@@ -1,7 +1,5 @@
-'use client'
-
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { isValidEmail } from '../../../lib/emailUtil'
 import { PAYMENT_CONFIG } from '../../../data/paymentConfig'
 import { PaymentModal, buildUpiPayUri, saveBooking } from '../../booking'
@@ -265,7 +263,7 @@ export function SeatMapPage() {
           {!session && (
             <>
               {' '}
-              <Link href="/" className="seat-map-page__inline-link">
+              <Link to="/" className="seat-map-page__inline-link">
                 Sign in from home
               </Link>{' '}
               to confirm and pay.
@@ -406,7 +404,7 @@ export function SeatMapPage() {
                 </button>
               ) : (
                 <p className="seat-map-page__bar-signin">
-                  <Link href="/">Go to home</Link> and use <strong>Book ticket</strong> to sign in, then
+                  <Link to="/">Go to home</Link> and use <strong>Book ticket</strong> to sign in, then
                   confirm seats here.
                 </p>
               )}

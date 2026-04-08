@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import type { AdminBooking, AdminBookingPaymentMethod, UserTicket } from '../../booking'
 import { ticketIsPaid } from '@/views/EventTicket'

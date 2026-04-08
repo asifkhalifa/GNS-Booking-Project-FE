@@ -1,8 +1,5 @@
-'use client'
-
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { Link, useNavigate } from 'react-router-dom'
 import { fetchUserTickets, type UserTicket } from '../modules/booking'
 import { fetchAllSeats } from '../modules/seat'
 import { useUser } from '../modules/user'
@@ -10,7 +7,7 @@ import { Redirect } from '@/components/Redirect'
 import { EventTicket, ticketIsPaid } from './EventTicket'
 
 export function TicketsPage() {
-  const router = useRouter()
+  const navigate = useNavigate()
   const { session } = useUser()
   const [tickets, setTickets] = useState<UserTicket[]>([])
   const [loading, setLoading] = useState(true)
@@ -18,7 +15,7 @@ export function TicketsPage() {
 
   useEffect(() => {
     if (!session?.email) {
-      router.replace('/')
+      navigate('/', { replace: true })
       return
     }
     let cancelled = false
@@ -51,7 +48,7 @@ export function TicketsPage() {
     return () => {
       cancelled = true
     }
-  }, [session?.email, router])
+  }, [session?.email, navigate])
 
   const sorted = useMemo(() => {
     return [...tickets].sort((a, b) => {
@@ -70,7 +67,7 @@ export function TicketsPage() {
   return (
     <main className="tickets-page">
       <div className="tickets-page__header">
-        <Link href="/" className="tickets-page__back">
+        <Link to="/" className="tickets-page__back">
           ← Back
         </Link>
         <h1 className="tickets-page__title">Your tickets</h1>

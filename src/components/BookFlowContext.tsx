@@ -1,7 +1,5 @@
-'use client'
-
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { UserBookingModal, useUser } from '@/modules/user'
 
 const BookFlowContext = createContext<(() => void) | null>(null)
@@ -12,14 +10,14 @@ export function useBookFlow(): () => void {
 }
 
 export function BookFlowProvider({ children }: { children: ReactNode }) {
-  const router = useRouter()
+  const navigate = useNavigate()
   const { session } = useUser()
   const [bookingOpen, setBookingOpen] = useState(false)
 
   const openBookFlow = useCallback(() => {
-    if (session) router.push('/seats')
+    if (session) navigate('/seats')
     else setBookingOpen(true)
-  }, [session, router])
+  }, [session, navigate])
 
   return (
     <BookFlowContext.Provider value={openBookFlow}>

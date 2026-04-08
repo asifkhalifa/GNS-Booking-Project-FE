@@ -1,5 +1,3 @@
-'use client'
-
 import { BookFlowProvider } from '@/components/BookFlowContext'
 import { UserHeader } from '@/modules/user'
 import { useBookFlow } from '@/components/BookFlowContext'

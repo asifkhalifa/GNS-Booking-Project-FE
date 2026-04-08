@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useEffect, useState } from 'react'
 import { PAYMENT_CONFIG } from '../../../data/paymentConfig'
 

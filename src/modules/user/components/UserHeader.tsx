@@ -1,7 +1,5 @@
-'use client'
-
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { useUser } from '../context/UserProvider'
 
 type Props = {
@@ -38,7 +36,7 @@ export function UserHeader({ onBookTicket }: Props) {
   return (
     <header className="site-header">
       <div className="site-header__inner">
-        <Link href="/" className="site-header__brand" onClick={closeMenu}>
+        <Link to="/" className="site-header__brand" onClick={closeMenu}>
           NAACH <span>&apos;26</span>
         </Link>
         <button
@@ -58,24 +56,24 @@ export function UserHeader({ onBookTicket }: Props) {
         <nav id="site-nav" className={`site-header__nav ${menuOpen ? 'site-header__nav--open' : ''}`}>
           {session?.isAdmin ? (
             <Link
-              href="/seats"
+              to="/seats"
               className="btn btn--primary site-header__nav-link--admin-seats"
               onClick={closeMenu}
             >
               Seats / book for guest
             </Link>
           ) : (
-            <Link href="/seats" className="btn btn--ghost" onClick={closeMenu}>
+            <Link to="/seats" className="btn btn--ghost" onClick={closeMenu}>
               Seats
             </Link>
           )}
           {session ? (
             session.isAdmin ? (
               <>
-                <Link href="/admin/tickets" className="btn btn--ghost" onClick={closeMenu}>
+                <Link to="/admin/tickets" className="btn btn--ghost" onClick={closeMenu}>
                   View all tickets
                 </Link>
-                <Link href="/admin/profile" className="btn btn--ghost" onClick={closeMenu}>
+                <Link to="/admin/profile" className="btn btn--ghost" onClick={closeMenu}>
                   My profile
                 </Link>
                 <button
@@ -91,10 +89,10 @@ export function UserHeader({ onBookTicket }: Props) {
               </>
             ) : (
               <>
-                <Link href="/tickets" className="btn btn--ghost" onClick={closeMenu}>
+                <Link to="/tickets" className="btn btn--ghost" onClick={closeMenu}>
                   View tickets
                 </Link>
-                <Link href="/profile" className="btn btn--ghost" onClick={closeMenu}>
+                <Link to="/profile" className="btn btn--ghost" onClick={closeMenu}>
                   My profile
                 </Link>
                 <button type="button" className="btn btn--primary" onClick={bookAndClose}>
